@@ -1,0 +1,120 @@
+---
+  title: "Irish_Jobs"
+author: "Nkirote"
+date: "19/04/2021"
+output:
+  word_document: default
+html_document: default
+---
+  
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load libraries needed for this task
+
+```{r}
+library(rvest)
+library(dplyr)
+```
+
+Scraper function for extracting data from the website
+
+```{r}
+scraper <- function(url,selector,output = "text",all_nodes = TRUE) {
+  
+  content <- read_html(url) 
+  
+  if (all_nodes){
+    nodes <- content %>%
+      html_nodes(selector)
+  }else{
+    nodes <- content %>%
+      html_node(selector)
+  }
+  
+  if (output == "text") {
+    extracted_data <- nodes %>%
+      html_text()
+  }else if(output == "table"){
+    extracted_data <- nodes %>%
+      html_table()
+  }else if (output == "attrs") {
+    extracted_data <- nodes %>% 
+      html_attrs()
+  }else{
+    extracted_data <- nodes %>%
+      html_attr(output)
+  }
+  
+  return(extracted_data)
+}
+
+```
+
+Initial dataframe
+```{r}
+df <- data.frame(irish_top_company_names = c(), total_review_scores = c(), reviewer_status = c(), reviewer_location = c(), reviewer_headlines = c())
+```
+
+Extract the companies and their attributes, including ; 
+a. Name of the Company
+b. Review category and their scores
+c. Date of review
+d. Reviewers Information (i.e. Job title,  Employment Status, Location)
+
+i. Scrape the company names
+
+```{r}
+irish_top_company_names <- scraper(url = "https://www.irishjobs.ie/company-reviews", selector = ".sky-top-company__box-name")
+irish_top_companies_names
+```
+
+ii. Scrape review categories and their scores
+
+```{r}
+total_review_scores <- scraper(url = "https://www.irishjobs.ie/company-reviews" , selector = ".sky-top-company__box-rating")
+
+total_review_scores <- as.numeric(str_split(total_review_scores, "/", simplify = TRUE)[,1])
+total_review_scores
+```
+
+iii. Scrape reviewer's info
+
+```{r}
+library(stringr)
+reviewers_info <- scraper(url = "https://www.irishjobs.ie/company-reviews", selector = ".sky-top-company__box-details")
+reviewers_info
+group_1 <- str_split(reviewers_info[c(1:6,10)], " in ", simplify = TRUE)
+group_1_status <- group_1[,1]
+
+group_2 <- str_split((reviewers_info[7:9]), " in ", n = -1, simplify = TRUE)
+group_2_status <- str_c(group_2[,1],group_2[,2], sep = " in ")
+
+reviewer_status <- c(group_1_status, group_2_status)
+reviewer_status
+
+reviewer_location <- str_split(c(group_1[,2], group_2[,3]), ",", simplify = TRUE)[,1]
+reviewer_location
+  
+```
+iv. Scrape the reviewer's headline
+
+```{r}
+reviewer_headlines <- scraper(url = "https://www.irishjobs.ie/company-reviews", selector = ".sky-top-company__box-headline")
+
+reviewer_headlines <- str_replace_all(reviewers_headline, '\"', "")
+reviewer_headlines
+```
+v. Join all the above vectors to form a dataframe for 10 Irish top company review information
+
+```{r}
+x <- as.data.frame(cbind(irish_top_company_names, total_review_scores, reviewer_status, reviewer_location, reviewer_headlines))
+
+irish_top_company_reviews <- rbind(df,x)
+irish_top_company_reviews
+
+```
+
+
+
