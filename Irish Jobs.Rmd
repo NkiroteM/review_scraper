@@ -52,6 +52,7 @@ scraper <- function(url,selector,output = "text",all_nodes = TRUE) {
 
 ```
 
+
 Initial dataframe
 ```{r}
 df <- data.frame(irish_top_company_names = c(), total_review_scores = c(), reviewer_status = c(), reviewer_location = c(), reviewer_headlines = c())
@@ -63,24 +64,24 @@ b. Review category and their scores
 c. Date of review
 d. Reviewers Information (i.e. Job title,  Employment Status, Location)
 
-i. Scrape the company names
 
+i. Scrape the company names
 ```{r}
 irish_top_company_names <- scraper(url = "https://www.irishjobs.ie/company-reviews", selector = ".sky-top-company__box-name")
-irish_top_companies_names
+irish_top_company_names
 ```
 
-ii. Scrape review categories and their scores
 
+ii. Scrape review categories and their scores
 ```{r}
 total_review_scores <- scraper(url = "https://www.irishjobs.ie/company-reviews" , selector = ".sky-top-company__box-rating")
 
-total_review_scores <- as.numeric(str_split(total_review_scores, "/", simplify = TRUE)[,1])
+total_review_scores <- as.numeric(stringr::str_split(total_review_scores, "/", simplify = TRUE)[,1])
 total_review_scores
 ```
 
-iii. Scrape reviewer's info
 
+iii. Scrape reviewer's info
 ```{r}
 library(stringr)
 reviewers_info <- scraper(url = "https://www.irishjobs.ie/company-reviews", selector = ".sky-top-company__box-details")
@@ -98,22 +99,23 @@ reviewer_location <- str_split(c(group_1[,2], group_2[,3]), ",", simplify = TRUE
 reviewer_location
   
 ```
-iv. Scrape the reviewer's headline
 
+
+iv. Scrape the reviewer's headline
 ```{r}
 reviewer_headlines <- scraper(url = "https://www.irishjobs.ie/company-reviews", selector = ".sky-top-company__box-headline")
 
-reviewer_headlines <- str_replace_all(reviewers_headline, '\"', "")
+reviewer_headlines <- stringr::str_replace_all(reviewer_headlines, '\"', "")
 reviewer_headlines
 ```
-v. Join all the above vectors to form a dataframe for 10 Irish top company review information
 
+
+v. Join all the above vectors to form a dataframe for 10 Irish top company review information
 ```{r}
 x <- as.data.frame(cbind(irish_top_company_names, total_review_scores, reviewer_status, reviewer_location, reviewer_headlines))
 
 irish_top_company_reviews <- rbind(df,x)
 irish_top_company_reviews
-
 ```
 
 
